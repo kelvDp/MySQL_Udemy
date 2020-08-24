@@ -694,7 +694,7 @@ FROM
 
 CREATE TABLE comments (
     content VARCHAR(40),
-    created_at TIMESTAMP DEFAULT NOW ()
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 INSERT INTO comments(content)
@@ -709,7 +709,7 @@ ORDER BY created_at DESC;
 
 CREATE TABLE comments_2 (
     content VARCHAR(50),
-    changed_at TIMESTAMP DEFAULT NOW () ON UPDATE CURRENT_TIMESTAMP
+    changed_at TIMESTAMP DEFAULT NOW() ON UPDATE CURRENT_TIMESTAMP
 ); -- changes timestamp when updating a comment 
 
 INSERT INTO comments_2(content)
