@@ -1136,3 +1136,70 @@ INSERT INTO reviews(series_id, reviewer_id, rating) VALUES
     (13,3,8.0),(13,4,7.2),
     (14,2,8.5),(14,3,8.9),(14,4,8.9);
 -- ------------------------------------------------------------------------
+-- DATABASE TRIGGERS:
+
+-- simple validation
+-- check to see if the person is 18 or older, if not, don't insert...
+
+CREATE TABLE user_triggers (
+    username VARCHAR(100),
+    age INT
+);
+
+INSERT INTO user_triggers
+VALUES
+("bobby", 22);
+
+DELIMITER $$ -- sets end point for code to $$
+CREATE TRIGGER must_be_adult
+	BEFORE INSERT ON user_triggers FOR EACH ROW
+    BEGIN
+		IF NEW.age < 18 -- new is a placeholder for any new 'person' being entered 
+        THEN
+			SIGNAL SQLSTATE "45000" -- tells system its a trigger error that you made
+				SET MESSAGE_TEXT = "Must be an adult !";
+		END IF;
+	END;
+$$ -- so code ends here (acts as ';')
+DELIMITER ; -- sets end point for code back to ;
+
+INSERT INTO user_triggers
+VALUES
+("Danny", 16); -- produces and error and does not insert person into table
+
+-- creating a logger trigger:
+-- we'll keep track of when someone unfollows someone else or deletes something etc
+
+-- have to make table to store the logs
+CREATE TABLE unfollows (
+    follower_id INT NOT NULL,
+    followee_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY(follower_id) REFERENCES users(id),
+    FOREIGN KEY(followee_id) REFERENCES users(id),
+    PRIMARY KEY(follower_id, followee_id)
+);
+
+
+DELIMITER $$
+
+CREATE TRIGGER capture_unfollow
+	AFTER DELETE ON follows FOR EACH ROW
+    BEGIN
+		INSERT INTO unfollows(follower_id, followee_id)
+        VALUES(OLD.follower_id, OLD.followee_id);
+	END;
+$$
+
+DELIMITER ;
+
+DELETE FROM follows
+WHERE follower_id = 2 AND followee_id = 1;
+
+SELECT * FROM unfollows; -- will show the entry just deleted.
+
+-- how to see all your triggers in a DB:
+SHOW TRIGGERS;
+
+-- how to remove a trigger:
+DROP TRIGGER trigger_name;
